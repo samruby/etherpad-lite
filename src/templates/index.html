@@ -36,6 +36,9 @@
         <link rel="localizations" type="application/l10n+json" href="locales.json">
         <script type="text/javascript" src="static/js/html10n.js"></script>
         <script type="text/javascript" src="static/js/l10n.js"></script>
+          <link rel="stylesheet" href="../static/css/persona-buttons.css" />
+        <script src="https://login.persona.org/include.js"></script>
+        <script src="../static/js/jquery.js"></script>
 
         <style>
             html, body {
@@ -148,7 +151,7 @@
             }
         </style>
         <link href="static/custom/index.css" rel="stylesheet"> 
-
+  <a id="signin" href="#" class="persona-button" style='float:right'><span>Sign in with your Email</span></a></div>
         <div id="wrapper">
             <div id="inner">
                 <div id="button" onclick="go2Random()" data-l10n-id="index.newPad"></div>
@@ -162,7 +165,53 @@
 
         <script src="static/custom/index.js"></script>
         <script> 
-      
+    
+        if(!<%=settings.requireAuthentication%>)
+        {
+            $('#signin').hide();
+            
+        }else {
+             $('#signin').show();
+              
+        
+        var signinLink = document.getElementById('signin');
+	if (signinLink) {
+	signinLink.onclick = function() { navigator.id.request();};	
+	}
+	var signoutLink = document.getElementById('signout');
+	if (signoutLink) {
+	  signoutLink.onclick = function() { navigator.id.logout(); };
+	}
+	//currentUser must be Initialiezed   
+	var currentUser = 'null'; 
+navigator.id.watch({
+  loggedInUser: currentUser,
+  onlogin: function(assertion) {
+     // A user has logged in! Here you need to:
+    // 1. Send the assertion to your backend for verification and to create a session.
+    // 2. Update your UI.
+    $.ajax({ /* <-- This example uses jQuery, but you can use whatever you'd like */
+      type: 'POST',
+      url: '/auth/login', // This is a URL on your website.http://localhost:9001
+      data: {assertion: assertion},
+      success: function(res, status, xhr) { window.location.reload();console.log("resussi"); },
+      error: function(xhr, status, err) { alert("Login failure: " + err); console.log("Faild"); }
+    });
+  },
+  onlogout: function() {
+    // A user has logged out! Here you need to:
+    // Tear down the user's session by redirecting the user or making a call to your backend.
+    // Also, make sure loggedInUser will get set to null on the next page load.
+    // (That's a literal JavaScript null. Not false, 0, or undefined. null.)
+    $.ajax({
+      type: 'POST',
+      url: '/auth/login', // This is a URL on your website.
+      success: function(res, status, xhr) { window.location.reload(); },
+      error: function(xhr, status, err) { alert("Logout failure: " + err); }
+    });
+  }
+});
+}
             function go2Name() 
             {
                 var padname = document.getElementById("padname").value;
